@@ -1,0 +1,35 @@
+extends layout
+
+block content
+    .mb-6
+        span.text-xs.text-gray-400.uppercase.font-medium Witch ##{witch._id}
+        h1.text-4xl.font-black.uppercase.tracking-tight= witch.name
+    
+    .flex.gap-2.mb-6
+        a.bg-gray-200.px-4.py-2.text-sm.uppercase.font-semibold.hover_bg-gray-300(href='/list-witches') ← Back
+        a.bg-black.text-white.px-4.py-2.text-sm.uppercase.font-semibold.hover_bg-purple-600(href='/edit-witch/' + witch._id) Edit
+        form(method='post', action='/witch/' + witch._id + '/delete', style="display:inline;")
+            button.bg-red-500.text-white.px-4.py-2.text-sm.uppercase.font-semibold.hover_bg-red-700(type='submit') Delete
+    
+    .bg-white.border-2.border-black.grid.grid-cols-2.md_grid-cols-3
+        .p-4.border-b-2.border-r-2.border-black
+            .text-xs.text-gray-400.uppercase.font-medium Barrier
+            .font-semibold.mt-1= witch.barrierType
+        .p-4.border-b-2.border-r-2.border-black
+            .text-xs.text-gray-400.uppercase.font-medium Danger Level
+            .font-semibold.mt-1= witch.dangerLevel + ' / 10'
+        .p-4.border-b-2.border-black
+            .text-xs.text-gray-400.uppercase.font-medium Status
+            if witch.defeated
+                span.bg-green-500.text-white.text-xs.px-2.py-1.uppercase.mt-1.inline-block.font-semibold Defeated
+            else
+                span.bg-red-500.text-white.text-xs.px-2.py-1.uppercase.mt-1.inline-block.font-semibold Active
+        .p-4.border-b-2.border-r-2.border-black
+            .text-xs.text-gray-400.uppercase.font-medium Origin
+            .font-semibold.mt-1= witch.magicalGirl ? witch.magicalGirl.name : '—'
+        .p-4.border-b-2.border-r-2.border-black
+            .text-xs.text-gray-400.uppercase.font-medium First Seen
+            .font-semibold.mt-1= witch.firstAppearance ? new Date(witch.firstAppearance).toLocaleDateString() : '—'
+        .p-4.border-b-2.border-black
+            .text-xs.text-gray-400.uppercase.font-medium Last Seen
+            .font-semibold.mt-1= witch.lastSeen ? new Date(witch.lastSeen).toLocaleDateString() : '—'

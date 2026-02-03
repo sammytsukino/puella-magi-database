@@ -1,0 +1,24 @@
+extends layout
+
+block content
+    .flex.justify-between.items-center.mb-6
+        h1.text-4xl.font-black.uppercase.tracking-tight FAMILIARS
+        a.bg-emerald-500.text-white.px-4.py-2.text-sm.uppercase.font-semibold.hover_bg-black(href='/new-familiar') + New
+    
+    if familiars.length == 0
+        .bg-white.border-2.border-black.p-12.text-center
+            .text-6xl.opacity-10.font-light ø
+            p.text-gray-500.mt-4.uppercase.text-sm.font-medium No familiars found
+    else
+        .bg-white.border-2.border-black.divide-y-2.divide-black
+            each f, i in familiars
+                a.block.p-4.hover_bg-gray-50.flex.justify-between.items-center(href='/familiar/' + f._id)
+                    div
+                        span.text-gray-400.text-xs.mr-4.font-medium= String(i + 1).padStart(2, '0')
+                        span.font-bold.uppercase= f.name
+                        if f.isEvolved
+                            span.bg-yellow-400.text-black.text-xs.px-2.py-1.ml-2.uppercase.font-semibold Evolved
+                    .text-xs.text-gray-500.uppercase.hidden.md_block.font-medium
+                        | #{f.type} / STR #{f.strength}
+                        if f.witch
+                            |  / #{f.witch.name}

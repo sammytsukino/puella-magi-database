@@ -1,0 +1,32 @@
+extends layout
+
+block content
+    .mb-6
+        span.text-xs.text-gray-400.uppercase.font-medium Familiar ##{familiar._id}
+        h1.text-4xl.font-black.uppercase.tracking-tight= familiar.name
+    
+    .flex.gap-2.mb-6
+        a.bg-gray-200.px-4.py-2.text-sm.uppercase.font-semibold.hover_bg-gray-300(href='/list-familiars') ← Back
+        a.bg-black.text-white.px-4.py-2.text-sm.uppercase.font-semibold.hover_bg-emerald-500(href='/edit-familiar/' + familiar._id) Edit
+        form(method='post', action='/familiar/' + familiar._id + '/delete', style="display:inline;")
+            button.bg-red-500.text-white.px-4.py-2.text-sm.uppercase.font-semibold.hover_bg-red-700(type='submit') Delete
+    
+    .bg-white.border-2.border-black.grid.grid-cols-2.md_grid-cols-3
+        .p-4.border-b-2.border-r-2.border-black
+            .text-xs.text-gray-400.uppercase.font-medium Type
+            .font-semibold.mt-1= familiar.type
+        .p-4.border-b-2.border-r-2.border-black
+            .text-xs.text-gray-400.uppercase.font-medium Strength
+            .font-semibold.mt-1= familiar.strength + ' / 100'
+        .p-4.border-b-2.border-black
+            .text-xs.text-gray-400.uppercase.font-medium Status
+            if familiar.isEvolved
+                span.bg-yellow-400.text-black.text-xs.px-2.py-1.uppercase.mt-1.inline-block.font-semibold Evolved
+            else
+                span.bg-gray-300.text-black.text-xs.px-2.py-1.uppercase.mt-1.inline-block.font-semibold Standard
+        .p-4.border-b-2.border-r-2.border-black
+            .text-xs.text-gray-400.uppercase.font-medium Parent Witch
+            .font-semibold.mt-1= familiar.witch ? familiar.witch.name : '—'
+        .p-4.border-b-2.border-black.col-span-2
+            .text-xs.text-gray-400.uppercase.font-medium Spawn Date
+            .font-semibold.mt-1= familiar.createdAt ? new Date(familiar.createdAt).toLocaleDateString() : '—'

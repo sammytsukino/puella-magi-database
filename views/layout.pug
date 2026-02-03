@@ -1,0 +1,22 @@
+doctype html
+html(lang="en")
+    head
+        meta(charset="UTF-8")
+        meta(name="viewport", content="width=device-width, initial-scale=1.0")
+        title マギカ-DB
+        link(rel="preconnect" href="https://fonts.googleapis.com")
+        link(rel="icon" href="https://res.cloudinary.com/dsy30p7gf/image/upload/v1770126760/FAVI_PUELLA_kj4s5z.png" type="image/x-icon")
+        link(rel="preconnect" href="https://fonts.gstatic.com" crossorigin)
+        link(href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet")
+        script(src="https://cdn.tailwindcss.com")
+        style.
+            * { font-family: 'Inter', sans-serif; }
+    body.bg-gray-100.min-h-screen
+        .max-w-5xl.mx-auto.px-4.py-8
+            nav.bg-white.border-2.border-black.p-4.mb-4.flex.items-center.justify-between
+                a.text-xl.font-black.uppercase.tracking-tight(href="/" class="hover:text-purple-600") マギカ-DB ↩
+                .flex.gap-6.text-sm.uppercase.tracking-wide.font-medium
+                    a(href="/list" class="hover:text-pink-500") Girls
+                    a(href="/list-witches" class="hover:text-purple-600") Witches
+                    a(href="/list-familiars" class="hover:text-emerald-500") Familiars
+            block content
