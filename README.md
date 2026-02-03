@@ -54,7 +54,7 @@ This project is a complete web application with REST API capabilities that allow
 ## Project Structure
 
 ```
-ud3-madoka/
+puella-magi-database/
 ├── index.js                          # Main server
 ├── db.js                            # MongoDB configuration
 ├── package.json                     # Project dependencies
