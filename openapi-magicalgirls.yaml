@@ -1,0 +1,135 @@
+openapi: 3.0.0
+
+info:
+  title: Magical Girls API
+  summary: API to manage Puella Magi Madoka Magica characters
+  description: REST API offering CRUD operations for the magical girls resource.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+
+components:
+  schemas:
+    MagicalGirl:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier assigned by MongoDB
+        name:
+          type: string
+          description: Magical girl name
+        soulGemColor:
+          type: string
+          description: Soul gem color
+        weapon:
+          type: string
+          enum:
+            - Bow
+            - Spear
+            - Sword
+            - Gun
+            - Shield
+            - Other
+          description: Magical girl weapon
+        wish:
+          type: string
+          description: Wish made when signing the contract
+        powerLevel:
+          type: integer
+          description: Power level (1-100)
+
+paths:
+  /magicalgirls:
+    get:
+      summary: List magical girls
+      description: Returns the complete list of magical girls
+      responses:
+        '200':
+          description: List of magical girls returned successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MagicalGirl'
+    post:
+      summary: Create magical girl
+      description: Adds a new magical girl
+      requestBody:
+        description: New magical girl data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MagicalGirl'
+        required: true
+      responses:
+        '201':
+          description: Magical girl created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MagicalGirl'
+        '400':
+          description: Invalid or missing attributes
+
+  /magicalgirls/{id}:
+    get:
+      summary: Get magical girl by ID
+      description: Returns a specific magical girl by identifier
+      parameters:
+        - name: id
+          in: path
+          description: Magical girl ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Magical girl returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MagicalGirl'
+        '404':
+          description: Not found in the system. Stan KiiiKiii! https://youtu.be/zhHB4dZTChw?si=3X7ySgWjMqjzvsju
+    put:
+      summary: Update magical girl
+      description: Updates an existing magical girl
+      parameters:
+        - name: id
+          in: path
+          description: Magical girl ID to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Updated magical girl data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MagicalGirl'
+        required: true
+      responses:
+        '204':
+          description: Magical girl updated successfully
+        '400':
+          description: Invalid or missing attributes
+        '404':
+          description: Not found in the system. Stan KiiiKiii! https://youtu.be/zhHB4dZTChw?si=3X7ySgWjMqjzvsju
+    delete:
+      summary: Delete magical girl
+      description: Deletes an existing magical girl
+      parameters:
+        - name: id
+          in: path
+          description: Magical girl ID to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Magical girl deleted successfully
+        '404':
+          description: Not found in the system. Stan KiiiKiii! https://youtu.be/zhHB4dZTChw?si=3X7ySgWjMqjzvsju
