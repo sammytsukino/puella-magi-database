@@ -12,11 +12,15 @@ This project is a complete web application with REST API capabilities that allow
 - **Witches**: Enemies associated with magical girls, featuring barrier type and danger level
 - **Familiars**: Minor creatures associated with witches
 
+The API includes **JWT-based authentication** (register, login, refresh) and **role-based protection** on selected routes.
+
 ## Technologies Used
 
 - **Backend**: Express.js 5.1.0
 - **Database**: MongoDB + Mongoose 9.1.5
 - **Template Engine**: Pug 3.0.3
+- **Authentication**: jsonwebtoken, bcryptjs (password hashing)
+- **Configuration**: dotenv (secrets and JWT settings)
 - **Runtime**: Node.js
 
 ## Prerequisites
@@ -30,7 +34,7 @@ This project is a complete web application with REST API capabilities that allow
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd puella-magi-database
+   cd ud3-madoka
    ```
 
 2. **Install dependencies**
@@ -38,71 +42,99 @@ This project is a complete web application with REST API capabilities that allow
    npm install
    ```
 
-3. **Configure the database**
-   - Ensure MongoDB is running
-   - Modify `db.js` if necessary with your connection string
+3. **Environment variables**
+   - Copy `.env.example` to `.env`
+   - Set **`JWT_SECRET`** and **`JWT_REFRESH_SECRET`** to strong, unique strings (used to sign access and refresh tokens)
+   - Optionally set **`ACCESS_TOKEN_EXPIRY`** and **`REFRESH_TOKEN_EXPIRY`** (defaults are shown in `.env.example`)
+   - Optionally set **`MONGO_URI`** if your MongoDB is not the default `mongodb://localhost:27017/madokadb`
 
-4. **Start the server**
+4. **Configure the database**
+   - Ensure MongoDB is running
+   - The app reads the connection string from `MONGO_URI` in `.env`, or falls back to `mongodb://localhost:27017/madokadb` in `db.js`
+
+5. **Start the server**
    ```bash
    npm start
    # Or directly with Node.js
    node index.js
    ```
 
-   The server will be available at `http://localhost:8080`
+   The server listens on **`http://localhost:8080`** (fixed port; not configured via `.env`).
+
+## Authentication (JWT)
+
+Send the access token in the **`Authorization`** header as:
+
+```http
+Authorization: Bearer <access_token>
+```
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/api/register` | Register with `username` and `password` in JSON body. New users get role `user` by default. |
+| POST | `/api/login` | Login; returns `{ access, refresh }` JSON Web Tokens. |
+| POST | `/api/refresh` | Body: `{ "refresh": "<refresh_token>" }`; returns a new `{ access, refresh }` pair. |
+
+**Admin-only operations:** assign the `admin` role to a user in the database (e.g. add `"admin"` to the `roles` array) to call routes that require `hasRole('admin')`.
 
 ## Project Structure
 
 ```
-puella-magi-database/
-├── index.js                          # Main server
-├── db.js                            # MongoDB configuration
-├── package.json                     # Project dependencies
+ud3-madoka/
+├── index.js                          # Entry point (loads dotenv, connects DB, starts server)
+├── app.js                            # Express app, routes, JWT auth endpoints
+├── db.js                             # MongoDB connection
+├── package.json
+├── .env.example                      # Template for secrets (copy to .env)
 ├── models/
-│   ├── MagicalGirl.js              # Magical girl schema
-│   ├── Witch.js                    # Witch schema
-│   └── Familiar.js                 # Familiar schema
-├── views/
-│   ├── layout.pug                  # Base template
-│   ├── index.pug                   # Home page
-│   ├── list.pug & listWitches.pug & listFamiliars.pug  # List views
-│   ├── detail.pug & detailWitch.pug & detailFamiliar.pug  # Detail views
-│   ├── edit.pug & editWitch.pug & editFamiliar.pug  # Edit forms
-│   └── new.pug & newWitch.pug & newFamiliar.pug  # Creation forms
-└── README.md                        # This file
+│   ├── User.js                       # Users (username, hashed password, roles)
+│   ├── MagicalGirl.js
+│   ├── Witch.js
+│   └── Familiar.js
+├── middleware/
+│   └── auth.js                       # authenticate, hasRole
+├── utils/
+│   └── jwt.js                        # generateTokens, verifyAccessToken, verifyRefreshToken
+├── test/                             # Mocha tests (JWT test secrets in test/setup.js)
+├── views/                            # Pug templates
+└── README.md
 ```
 
 ## API Routes
 
+### Authentication
+
+See [Authentication (JWT)](#authentication-jwt) above.
+
 ### Magical Girls
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/magicalgirls` | Get all magical girls (JSON) |
-| GET | `/magicalgirls/:id` | Get a magical girl by ID (JSON) |
-| POST | `/magicalgirls` | Create a new magical girl (JSON) |
-| PUT | `/magicalgirls/:id` | Update a magical girl (JSON) |
-| DELETE | `/magicalgirls/:id` | Delete a magical girl (JSON) |
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| GET | `/magicalgirls` | No | Get all magical girls (JSON) |
+| GET | `/magicalgirls/:id` | No | Get a magical girl by ID (JSON) |
+| POST | `/magicalgirls` | Yes (any logged-in user) | Create a new magical girl (JSON) |
+| PUT | `/magicalgirls/:id` | Yes (any logged-in user) | Update a magical girl (JSON) |
+| DELETE | `/magicalgirls/:id` | Yes (`admin` role) | Delete a magical girl (JSON) |
 
 ### Witches
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/witches` | Get all witches (JSON) |
-| GET | `/witches/:id` | Get a witch by ID (JSON) |
-| POST | `/witches` | Create a new witch (JSON) |
-| PUT | `/witches/:id` | Update a witch (JSON) |
-| DELETE | `/witches/:id` | Delete a witch (JSON) |
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| GET | `/witches` | No | Get all witches (JSON) |
+| GET | `/witches/:id` | No | Get a witch by ID (JSON) |
+| POST | `/witches` | No | Create a new witch (JSON) |
+| PUT | `/witches/:id` | No | Update a witch (JSON) |
+| DELETE | `/witches/:id` | Yes (`admin` role) | Delete a witch (JSON) |
 
 ### Familiars
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/familiars` | Get all familiars (JSON) |
-| GET | `/familiars/:id` | Get a familiar by ID (JSON) |
-| POST | `/familiars` | Create a new familiar (JSON) |
-| PUT | `/familiars/:id` | Update a familiar (JSON) |
-| DELETE | `/familiars/:id` | Delete a familiar (JSON) |
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| GET | `/familiars` | No | Get all familiars (JSON) |
+| GET | `/familiars/:id` | No | Get a familiar by ID (JSON) |
+| POST | `/familiars` | No | Create a new familiar (JSON) |
+| PUT | `/familiars/:id` | No | Update a familiar (JSON) |
+| DELETE | `/familiars/:id` | No | Delete a familiar (JSON) |
 
 ## Web Interface Routes
 
@@ -133,6 +165,12 @@ puella-magi-database/
 | `/familiar/:id/delete` | Delete familiar (POST) |
 
 ## Data Models
+
+### User
+
+- `username` (String, required, unique): Login name
+- `password` (String, required): Stored as a **bcrypt** hash, never in plain text
+- `roles` (Array of strings, default `['user']`): Used in JWT and for `hasRole` checks (e.g. `admin`)
 
 ### Magical Girl
 
@@ -170,6 +208,8 @@ puella-magi-database/
 - REST API with JSON responses
 - Error handling and validation
 - Duplicate name prevention
+- **JWT authentication**: registration, login, token refresh
+- **Protected API routes**: some endpoints require a valid Bearer token; deletions of magical girls and witches require the **`admin`** role
 
 ## Author
 
