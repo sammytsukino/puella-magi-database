@@ -3,6 +3,9 @@ const app = express();
 const MagicalGirl = require('./models/MagicalGirl');
 const Witch = require('./models/Witch');
 const Familiar = require('./models/Familiar');
+const User = require('./models/User');
+const { generateTokens, verifyRefreshToken } = require('./utils/jwt');
+const { authenticate, hasRole } = require('./middleware/auth');
 
 app.use(express.json());
 app.use(express.urlencoded());
@@ -11,6 +14,50 @@ app.set('views', './views');
 
 app.get('/', (req, res) => res.redirect('/index'));
 app.get('/index', (req, res) => res.render('index', {title: 'Welcome'}));
+
+app.post('/api/register', async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ message: 'username y password son requeridos' });
+  }
+  const exists = await User.findOne({ username });
+  if (exists) return res.status(400).json({ message: 'El usuario ya existe' });
+  try {
+    const resultado = await User.create({ username, password });
+    res.status(201).json({
+      username: resultado.username,
+      roles: resultado.roles
+    });
+  } catch (err) {
+    if (err.name === 'ValidationError') return res.status(400).send(err.message);
+    if (err.code === 11000) return res.status(400).json({ message: 'El usuario ya existe' });
+    throw err;
+  }
+});
+
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+  const user = await User.findOne({ username });
+  if (!user || !(await user.comparePassword(password))) {
+    return res.status(401).json({ message: 'Credenciales incorrectas' });
+  }
+  return res.json(generateTokens(user));
+});
+
+app.post('/api/refresh', async (req, res) => {
+  const { refresh } = req.body;
+  if (!refresh) {
+    return res.status(400).json({ message: 'Refresh token requerido' });
+  }
+  try {
+    const payload = verifyRefreshToken(refresh);
+    const user = await User.findById(payload.sub);
+    if (!user) return res.status(401).json({ message: 'Usuario no encontrado' });
+    return res.json(generateTokens(user));
+  } catch {
+    return res.status(401).json({ detail: 'Refresh token inválido o expirado' });
+  }
+});
 
 app.get('/magicalgirls', async (req, res) => {
     const resultado = await MagicalGirl.find();
@@ -23,7 +70,7 @@ app.get('/magicalgirls/:id', async (req, res) => {
     res.send(resultado);
 });
 
-app.post('/magicalgirls', async (req, res) => {
+app.post('/magicalgirls', authenticate, async (req, res) => {
     const c = req.body;
     const existe = await MagicalGirl.findOne({name: c.name});
     if (existe) {
@@ -38,7 +85,7 @@ app.post('/magicalgirls', async (req, res) => {
     }
 });
 
-app.put('/magicalgirls/:id', async (req, res) => {
+app.put('/magicalgirls/:id', authenticate, async (req, res) => {
     const c = req.body;
     const existe = await MagicalGirl.findOne({name: c.name, _id: {$ne: req.params.id}});
     if (existe) {
@@ -54,7 +101,7 @@ app.put('/magicalgirls/:id', async (req, res) => {
     }
 });
 
-app.delete('/magicalgirls/:id', async (req, res) => {
+app.delete('/magicalgirls/:id', authenticate, hasRole('admin'), async (req, res) => {
     const resultado = await MagicalGirl.findByIdAndDelete(req.params.id);
     if (!resultado) return res.sendStatus(404);
     res.sendStatus(204);
@@ -102,7 +149,7 @@ app.put('/witches/:id', async (req, res) => {
     }
 });
 
-app.delete('/witches/:id', async (req, res) => {
+app.delete('/witches/:id', authenticate, hasRole('admin'), async (req, res) => {
     const resultado = await Witch.findByIdAndDelete(req.params.id);
     if (!resultado) return res.sendStatus(404);
     res.sendStatus(204);

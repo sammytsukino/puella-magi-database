@@ -4,13 +4,16 @@
   "description": "Puella Magi Madoka Magica - Express MongoDB app",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test/*.test.js --timeout 10000",
+    "test": "mocha test/*.test.js --require test/setup.js --timeout 10000",
     "start": "node index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.0.0",
     "mongoose": "^9.1.5",
     "pug": "^3.0.3"

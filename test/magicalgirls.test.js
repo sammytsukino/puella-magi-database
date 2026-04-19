@@ -5,6 +5,7 @@ const { expect } = require('chai');
 
 const app = require('../app');
 const MagicalGirl = require('../models/MagicalGirl');
+const { bearerUser, bearerAdmin } = require('./tokens');
 
 describe('MagicalGirls API unit tests', () => {
 
@@ -39,6 +40,7 @@ describe('MagicalGirls API unit tests', () => {
 
     const res = await request(app)
       .post('/magicalgirls')
+      .set('Authorization', bearerUser())
       .send({
         name: 'Sayaka',
         soulGemColor: 'Blue',
@@ -75,6 +77,7 @@ describe('MagicalGirls API unit tests', () => {
 
     const res = await request(app)
       .put('/magicalgirls/1')
+      .set('Authorization', bearerUser())
       .send({
         name: 'Madoka',
         soulGemColor: 'Pink',
@@ -88,7 +91,9 @@ describe('MagicalGirls API unit tests', () => {
   it('DELETE magicalgirl', async () => {
     sinon.stub(MagicalGirl, 'findByIdAndDelete').resolves({ _id: '1' });
 
-    const res = await request(app).delete('/magicalgirls/1');
+    const res = await request(app)
+      .delete('/magicalgirls/1')
+      .set('Authorization', bearerAdmin());
 
     expect(res.status).to.equal(204);
   });
@@ -101,6 +106,7 @@ describe('MagicalGirls API unit tests', () => {
 
     const res = await request(app)
       .post('/magicalgirls')
+      .set('Authorization', bearerUser())
       .send({
         name: 'Test',
         soulGemColor: 'Red',
@@ -120,6 +126,7 @@ describe('MagicalGirls API unit tests', () => {
 
     const res = await request(app)
       .post('/magicalgirls')
+      .set('Authorization', bearerUser())
       .send({
         name: 'A',
         soulGemColor: 'Red',
@@ -139,6 +146,7 @@ describe('MagicalGirls API unit tests', () => {
 
     const res = await request(app)
       .post('/magicalgirls')
+      .set('Authorization', bearerUser())
       .send({
         name: 'Test',
         soulGemColor: 'Red',
@@ -158,6 +166,7 @@ describe('MagicalGirls API unit tests', () => {
 
     const res = await request(app)
       .post('/magicalgirls')
+      .set('Authorization', bearerUser())
       .send({
         name: 'Test',
         weapon: 'Sword',

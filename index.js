@@ -1,9 +1,10 @@
-const {connectDB} = require('./db');
+require('dotenv').config();
+const { connectDB } = require('./db');
 
 connectDB();
 
 const app = require('./app');
 
 app.listen(8080, () => {
-    console.log('Server started');
+  console.log('Server started');
 });
