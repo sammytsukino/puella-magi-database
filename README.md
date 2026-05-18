@@ -21,6 +21,8 @@ The API includes **JWT-based authentication** (register, login, refresh) and **r
 - **Template Engine**: Pug 3.0.3
 - **Authentication**: jsonwebtoken, bcryptjs (password hashing)
 - **Configuration**: dotenv (secrets and JWT settings)
+- **Logging**: Morgan (HTTP request logs)
+- **CI/CD**: GitHub Actions + Render deploy hook
 - **Runtime**: Node.js
 
 ## Prerequisites
@@ -59,7 +61,7 @@ The API includes **JWT-based authentication** (register, login, refresh) and **r
    node index.js
    ```
 
-   The server listens on **`http://localhost:8080`** (fixed port; not configured via `.env`).
+   The server listens on **`http://localhost:8080`** by default, or on the port set in **`PORT`** (Render sets this automatically).
 
 ## Authentication (JWT)
 
@@ -97,10 +99,19 @@ ud3-madoka/
 │   └── jwt.js                        # generateTokens, verifyAccessToken, verifyRefreshToken
 ├── test/                             # Mocha tests (JWT test secrets in test/setup.js)
 ├── views/                            # Pug templates
+├── .github/workflows/ci-cd.yml       # CI: tests, coverage, Docker; CD: Render hook
+├── Dockerfile                        # Optional container image
+├── docs/screenshots/                 # Render verification captures (UD06)
 └── README.md
 ```
 
 ## API Routes
+
+### Health
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| GET | `/health` | No | API and database health check (200 OK or 503) |
 
 ### Authentication
 
@@ -199,6 +210,91 @@ See [Authentication (JWT)](#authentication-jwt) above.
 - `strength` (Number): Strength level
 - `isEvolved` (Boolean): Whether it has evolved
 
+## Deployment and maintenance (UD06)
+
+### Continuous integration and deployment
+
+The workflow [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) runs on every **push to `main`**:
+
+1. Spins up a **MongoDB** service container for the job environment.
+2. Installs dependencies and runs **`npm test`**.
+3. Calculates **test coverage** with **`npm run test:coverage`** (nyc).
+4. Builds a **Docker image** (`docker build`) as an extra validation step.
+5. If all steps succeed, triggers a **Render** deploy via the deploy hook secret.
+
+Configure the deploy hook in GitHub:
+
+1. In Render: **Settings → Deploy → Deploy Hook** (copy the URL). Disable **Auto-Deploy** so only the workflow deploys after tests pass.
+2. In GitHub: **Settings → Secrets and variables → Actions → New repository secret** named `RENDER_DEPLOY_HOOK_URL` with that URL.
+
+### Render configuration
+
+| Setting | Value |
+|---------|--------|
+| **Build command** | `npm install` |
+| **Start command** | `npm start` |
+| **Health check path** | `/health` |
+| **Auto-Deploy** | Off (deploy from GitHub Actions) |
+
+**Environment variables** on Render (minimum):
+
+- `MONGO_URI` — MongoDB Atlas connection string (or your production database URL).
+- `JWT_SECRET`, `JWT_REFRESH_SECRET` — strong unique values (never commit them).
+- `NODE_ENV` — set to `prod` for Morgan `combined` logs in production.
+- `PORT` — assigned automatically by Render; do not override unless needed.
+
+Optional: `ACCESS_TOKEN_EXPIRY`, `REFRESH_TOKEN_EXPIRY`.
+
+### Health check
+
+`GET /health` verifies that the API and MongoDB are reachable. On success it returns **200** with JSON:
+
+```json
+{
+  "status": "ok",
+  "uptime": 123.45,
+  "timestamp": 1710000000000
+}
+```
+
+If the database query fails, the route returns **503**. Configure this path under **Settings → Health Checks** in Render so failed checks can trigger a restart.
+
+### Logging
+
+[Morgan](https://www.npmjs.com/package/morgan) logs every HTTP request. Format depends on `NODE_ENV`:
+
+- `prod` → `combined` (detailed, suitable for production).
+- any other value → `dev` (compact, suitable for local development).
+
+View logs in Render under the **Logs** tab after traffic hits the service (e.g. open `/` or `/health`).
+
+### Render verification (screenshots)
+
+After deploying, confirm health and logs in the Render dashboard and save screenshots for the assignment:
+
+| Screenshot | Where in Render |
+|------------|-----------------|
+| Health check configured | **Settings → Health Checks** (`/health`) |
+| Successful health response | Browser or curl: `https://<your-service>.onrender.com/health` |
+| Request logs (Morgan) | **Logs** tab after visiting the site |
+
+Example screenshots for this project (replace with your own service URL if different):
+
+![Health check path in Render](docs/screenshots/render-health-check-settings.png)
+
+![Health endpoint response](docs/screenshots/render-health-endpoint.png)
+
+![Morgan logs in Render](docs/screenshots/render-logs-morgan.png)
+
+> Add your PNG files under `docs/screenshots/` with the names above after verifying on your Render service.
+
+### Docker (optional local run)
+
+```bash
+docker build -t ud3-madoka .
+docker run -p 8080:8080 --env-file .env ud3-madoka
+```
+
 ## Key Features
 
 - Complete CRUD operations for all three entity types
@@ -210,6 +306,9 @@ See [Authentication (JWT)](#authentication-jwt) above.
 - Duplicate name prevention
 - **JWT authentication**: registration, login, token refresh
 - **Protected API routes**: some endpoints require a valid Bearer token; deletions of magical girls and witches require the **`admin`** role
+- **`/health` endpoint**: checks API and MongoDB availability for Render health checks
+- **HTTP logging** with Morgan (`dev` locally, `combined` when `NODE_ENV=prod`)
+- **CI/CD**: GitHub Actions runs tests and coverage, builds Docker, then deploys to Render via deploy hook
 
 ## Author
 

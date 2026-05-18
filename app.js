@@ -1,4 +1,5 @@
 const express = require('express');
+const morgan = require('morgan');
 const app = express();
 const MagicalGirl = require('./models/MagicalGirl');
 const Witch = require('./models/Witch');
@@ -7,10 +8,26 @@ const User = require('./models/User');
 const { generateTokens, verifyRefreshToken } = require('./utils/jwt');
 const { authenticate, hasRole } = require('./middleware/auth');
 
+const logFormat = process.env.NODE_ENV === 'prod' ? 'combined' : 'dev';
+app.use(morgan(logFormat));
+
 app.use(express.json());
 app.use(express.urlencoded());
 app.set('view engine', 'pug');
 app.set('views', './views');
+
+app.get('/health', async (req, res) => {
+  try {
+    await MagicalGirl.find().limit(1);
+    res.status(200).json({
+      status: 'ok',
+      uptime: process.uptime(),
+      timestamp: Date.now()
+    });
+  } catch {
+    res.sendStatus(503);
+  }
+});
 
 app.get('/', (req, res) => res.redirect('/index'));
 app.get('/index', (req, res) => res.render('index', {title: 'Welcome'}));
