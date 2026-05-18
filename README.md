@@ -210,7 +210,7 @@ See [Authentication (JWT)](#authentication-jwt) above.
 - `strength` (Number): Strength level
 - `isEvolved` (Boolean): Whether it has evolved
 
-## Deployment and maintenance (UD06)
+## Deployment and maintenance
 
 ### Continuous integration and deployment
 
@@ -257,7 +257,7 @@ Optional: `ACCESS_TOKEN_EXPIRY`, `REFRESH_TOKEN_EXPIRY`.
 }
 ```
 
-If the database query fails, the route returns **503**. Configure this path under **Settings → Health Checks** in Render so failed checks can trigger a restart.
+If the database query fails, the route returns **503**. In production, Render monitors **`/health`** under **Settings → Health Checks** and can restart the service on failure.
 
 ### Logging
 
@@ -266,27 +266,28 @@ If the database query fails, the route returns **503**. Configure this path unde
 - `prod` → `combined` (detailed, suitable for production).
 - any other value → `dev` (compact, suitable for local development).
 
-View logs in Render under the **Logs** tab after traffic hits the service (e.g. open `/` or `/health`).
+On Render, request logs appear in the **Logs** tab (e.g. after calls to `/health` or `/list`).
 
-### Render verification (screenshots)
+### Production deployment
 
-After deploying, confirm health and logs in the Render dashboard and save screenshots for the assignment:
+Live service: **https://puella-magi-database.onrender.com/**
 
-| Screenshot | Where in Render |
-|------------|-----------------|
-| Health check configured | **Settings → Health Checks** (`/health`) |
-| Successful health response | Browser or curl: `https://<your-service>.onrender.com/health` |
-| Request logs (Morgan) | **Logs** tab after visiting the site |
+| Area | What is in place |
+|------|------------------|
+| Health Checks (Render) | Path `/health` |
+| Health endpoint | `GET /health` → 200 with `status: ok` when API and MongoDB respond |
+| HTTP logging | Morgan `combined` logs in Render (**Logs**) with `NODE_ENV=prod` |
+| CI/CD | GitHub Actions: tests, coverage (nyc), Docker build, deploy hook to Render |
 
-Example screenshots for this project (replace with your own service URL if different):
+Screenshots from the deployed service and dashboard:
 
-![Health check path in Render](docs/screenshots/render-health-check-settings.png)
+![Health check path configured in Render](docs/screenshots/render-health-check-settings.png)
 
-![Health endpoint response](docs/screenshots/render-health-endpoint.png)
+![Health endpoint response on production](docs/screenshots/render-health-endpoint.png)
 
-![Morgan logs in Render](docs/screenshots/render-logs-morgan.png)
+![Morgan request logs in Render](docs/screenshots/render-logs-morgan.png)
 
-> Add your PNG files under `docs/screenshots/` with the names above after verifying on your Render service.
+![GitHub Actions workflow completed successfully](docs/screenshots/github-actions.png)
 
 ### Docker (optional local run)
 
